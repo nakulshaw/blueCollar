@@ -13,9 +13,17 @@ const ApplicationSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'accepted', 'rejected'],
+        enum: ['pending', 'accepted', 'rejected', 'completed'],
         default: 'pending'
-    }
+    },
+    workImages: [String],
+    rating: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    review: String,
+    completedAt: Date
 }, { timestamps: true });
 
 module.exports = mongoose.model('application', ApplicationSchema);

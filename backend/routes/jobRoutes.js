@@ -176,4 +176,90 @@ router.put('/applications/:appId', auth, async (req, res) => {
     }
 });
 
+const multer = require('multer');
+const path = require('path');
+
+// Multer Storage Configuration
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    }
+});
+const upload = multer({ storage });
+
+// @route   PUT api/jobs/applications/:appId/complete
+// @desc    Mark application as completed and upload evidence (Worker only)
+router.put('/applications/:appId/complete', auth, upload.array('workImages', 5), async (req, res) => {
+    try {
+        let application = await Application.findById(req.params.appId);
+        if (!application) return res.status(404).json({ msg: 'Application not found' });
+
+        if (application.worker.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized' });
+        }
+
+        const imageUrls = req.files.map(file => `/uploads/${file.filename}`);
+        
+        application.status = 'completed';
+        application.workImages = imageUrls;
+        application.completedAt = Date.now();
+        
+        await application.save();
+        res.json(application);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   PUT api/jobs/applications/:appId/review
+// @desc    Rate and review a worker after job completion (Employer only)
+router.put('/applications/:appId/review', auth, async (req, res) => {
+    const { rating, review } = req.body;
+    try {
+        let application = await Application.findById(req.params.appId).populate('job');
+        if (!application) return res.status(404).json({ msg: 'Application not found' });
+
+        if (application.job.employer.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized' });
+        }
+
+        if (application.status !== 'completed') {
+            return res.status(400).json({ msg: 'Job must be completed before reviewing' });
+        }
+
+        application.rating = rating;
+        application.review = review;
+        
+        await application.save();
+        res.json(application);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/jobs/worker/:workerId/history
+// @desc    Get work history and ratings for a specific worker
+router.get('/worker/:workerId/history', auth, async (req, res) => {
+    try {
+        const history = await Application.find({ 
+            worker: req.params.workerId, 
+            status: 'completed' 
+        }).populate('job', 'title salary locationName employer');
+        
+        // Calculate average rating
+        const ratings = history.filter(h => h.rating).map(h => h.rating);
+        const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : 0;
+
+        res.json({ history, avgRating, count: history.length });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;
