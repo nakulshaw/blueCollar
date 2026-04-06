@@ -198,7 +198,15 @@ const upload = multer({ storage });
 
 // @route   PUT api/jobs/applications/:appId/complete
 // @desc    Mark application as completed and upload evidence (Worker only)
-router.put('/applications/:appId/complete', auth, upload.array('workImages', 5), async (req, res) => {
+router.put('/applications/:appId/complete', auth, (req, res, next) => {
+    upload.array('workImages', 5)(req, res, (err) => {
+        if (err) {
+            console.error('Multer/Cloudinary Error:', err);
+            return res.status(500).json({ msg: 'Upload failed', error: err.message });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.appId)) {
             return res.status(400).json({ msg: 'Invalid Application ID' });
