@@ -1,22 +1,29 @@
 {
+  "cli": {
+    "version": ">= 12.0.0",
+    "appExtensions": {
+      "core": {
+        "build": {
+          "ios": {
+            "ext": "com.apple.developer.nfc.readersession.formats"
+          }
+        }
+      }
+    }
+  },
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      }
+      "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
       "android": {
         "buildType": "apk"
       }
     },
-    "production": {
-      "android": {
-        "buildType": "app-bundle"
-      }
-    }
+    "production": {}
+  },
+  "submit": {
+    "production": {}
   }
 }
