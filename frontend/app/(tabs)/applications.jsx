@@ -17,7 +17,7 @@ export default function Applications() {
     const [selectedAppId, setSelectedAppId] = useState(null);
     const [rating, setRating] = useState(5);
     const [reviewText, setReviewText] = useState('');
-    const [uploading, setUploading] = useState(false);
+    const [uploadingAppId, setUploadingAppId] = useState(null);
     const [workerHistory, setWorkerHistory] = useState([]);
     const [workerAvgRating, setWorkerAvgRating] = useState(0);
     const [historyModalVisible, setHistoryModalVisible] = useState(false);
@@ -84,7 +84,7 @@ export default function Applications() {
             });
 
             if (!result.canceled && result.assets.length > 0) {
-                setUploading(true);
+                setUploadingAppId(appId);
                 const formData = new FormData();
                 result.assets.forEach((asset, index) => {
                     const localUri = asset.uri;
@@ -105,7 +105,7 @@ export default function Applications() {
             console.error(err);
             Alert.alert('Error', 'Failed to upload work evidence.');
         } finally {
-            setUploading(false);
+            setUploadingAppId(null);
         }
     };
 
@@ -152,11 +152,11 @@ export default function Applications() {
 
             {item.status === 'accepted' && (
                 <TouchableOpacity
-                    style={[styles.completeBtn, uploading && { opacity: 0.5 }]}
+                    style={[styles.completeBtn, uploadingAppId === item._id && { opacity: 0.5 }]}
                     onPress={() => handleCompleteJob(item._id)}
-                    disabled={uploading}
+                    disabled={!!uploadingAppId}
                 >
-                    <Text style={styles.btnText}>{uploading ? 'Uploading...' : 'Mark as Completed'}</Text>
+                    <Text style={styles.btnText}>{uploadingAppId === item._id ? 'Uploading...' : 'Mark as Completed'}</Text>
                 </TouchableOpacity>
             )}
 

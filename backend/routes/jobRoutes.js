@@ -176,11 +176,15 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
+if (process.env.CLOUDINARY_URL) {
+    console.log('Cloudinary configured via CLOUDINARY_URL');
+} else {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+}
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
@@ -196,6 +200,9 @@ const upload = multer({ storage });
 // @desc    Mark application as completed and upload evidence (Worker only)
 router.put('/applications/:appId/complete', auth, upload.array('workImages', 5), async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.appId)) {
+            return res.status(400).json({ msg: 'Invalid Application ID' });
+        }
         let application = await Application.findById(req.params.appId);
         if (!application) return res.status(404).json({ msg: 'Application not found' });
         if (application.worker.toString() !== req.user.id) {
@@ -211,8 +218,8 @@ router.put('/applications/:appId/complete', auth, upload.array('workImages', 5),
         await application.save();
         res.json(application);
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
+        console.error('CompleteJob Error:', err);
+        res.status(500).json({ msg: 'Server Error', error: err.message });
     }
 });
 
