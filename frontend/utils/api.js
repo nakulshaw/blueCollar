@@ -2,7 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
-  baseURL: 'http://10.51.199.59:5000/api', // Replaced with LAN IP for Expo Go
+  // REPLACE THIS with your hosted backend URL once deployed (e.g. https://blue-collar-api.onrender.com/api)
+  baseURL: 'http://10.51.199.59:5000/api', 
   headers: {
     'Content-Type': 'application/json'
   }
