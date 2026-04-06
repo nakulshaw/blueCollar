@@ -2,7 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
-  // REPLACE THIS with your hosted backend URL once deployed (e.g. https://blue-collar-api.onrender.com/api)
+  // REMOTE: 'https://bluecollar-oos6.onrender.com/api'
+  // LOCAL: 'http://localhost:5000/api' or 'http://10.0.2.2:5000/api'
   baseURL: 'https://bluecollar-oos6.onrender.com/api',
   headers: {
     'Content-Type': 'application/json'
@@ -13,7 +14,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
-    if (token) {
+    if (token && token !== 'null' && token !== 'undefined') {
       config.headers['x-auth-token'] = token;
     }
     return config;

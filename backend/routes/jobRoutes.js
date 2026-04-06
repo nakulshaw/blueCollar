@@ -157,18 +157,12 @@ router.put('/applications/:appId', auth, async (req, res) => {
     const { status } = req.body;
     try {
         let application = await Application.findById(req.params.appId).populate('job', 'employer');
-        if (!application) {
-            return res.status(404).json({ msg: 'Application not found' });
-        }
-
-        // Only the employer who posted the job can modify the application
+        if (!application) return res.status(404).json({ msg: 'Application not found' });
         if (application.job.employer.toString() !== req.user.id) {
-            return res.status(401).json({ msg: 'Not authorized to perform this update' });
+            return res.status(401).json({ msg: 'Not authorized' });
         }
-
         application.status = status;
         await application.save();
-
         res.json(application);
     } catch (err) {
         console.error(err.message);
@@ -177,17 +171,23 @@ router.put('/applications/:appId', auth, async (req, res) => {
 });
 
 const multer = require('multer');
-const path = require('path');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'bluecollar-work-evidence',
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+    },
+});
+
 const upload = multer({ storage });
 
 // @route   PUT api/jobs/applications/:appId/complete
@@ -196,17 +196,16 @@ router.put('/applications/:appId/complete', auth, upload.array('workImages', 5),
     try {
         let application = await Application.findById(req.params.appId);
         if (!application) return res.status(404).json({ msg: 'Application not found' });
-
         if (application.worker.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
-
-        const imageUrls = req.files.map(file => `/uploads/${file.filename}`);
+        
+        // Use file.path for Cloudinary URLs
+        const imageUrls = req.files.map(file => file.path);
         
         application.status = 'completed';
         application.workImages = imageUrls;
         application.completedAt = Date.now();
-        
         await application.save();
         res.json(application);
     } catch (err) {
@@ -222,18 +221,14 @@ router.put('/applications/:appId/review', auth, async (req, res) => {
     try {
         let application = await Application.findById(req.params.appId).populate('job');
         if (!application) return res.status(404).json({ msg: 'Application not found' });
-
         if (application.job.employer.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
-
         if (application.status !== 'completed') {
             return res.status(400).json({ msg: 'Job must be completed before reviewing' });
         }
-
         application.rating = rating;
         application.review = review;
-        
         await application.save();
         res.json(application);
     } catch (err) {
@@ -242,8 +237,30 @@ router.put('/applications/:appId/review', auth, async (req, res) => {
     }
 });
 
-// @route   GET api/jobs/worker/:workerId/history
-// @desc    Get work history and ratings for a specific worker
+// @route   PUT api/jobs/applications/:appId
+// @desc    Update application status (Employer only)
+// @access  Private (Employer)
+router.put('/applications/:appId', auth, async (req, res) => {
+    const { status } = req.body;
+    try {
+        let application = await Application.findById(req.params.appId).populate('job', 'employer');
+        if (!application) {
+            return res.status(404).json({ msg: 'Application not found' });
+        }
+        // Only the employer who posted the job can modify the application
+        if (application.job.employer.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized to perform this update' });
+        }
+        application.status = status;
+        await application.save();
+        res.json(application);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// GET api/jobs/worker/:workerId/history
 router.get('/worker/:workerId/history', auth, async (req, res) => {
     try {
         const history = await Application.find({ 

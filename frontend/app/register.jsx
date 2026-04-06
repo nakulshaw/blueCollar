@@ -59,10 +59,10 @@ export default function Register() {
                     </TouchableOpacity>
                 </View>
 
-                <TextInput style={styles.input} placeholder="Full Name" value={name} onChangeText={setName} />
-                <TextInput style={styles.input} placeholder="Email (Optional)" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-                <TextInput style={styles.input} placeholder="Phone Number (Optional)" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-                <TextInput style={styles.input} placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
+                <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor="#1c1c1cff" value={name} onChangeText={setName} />
+                <TextInput style={styles.input} placeholder="Email (Optional)" placeholderTextColor="#1c1c1cff" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
+                <TextInput style={styles.input} placeholder="Phone Number (Optional)" placeholderTextColor="#1c1c1cff" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
+                <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#1c1c1cff" secureTextEntry value={password} onChangeText={setPassword} />
             </View>
 
             {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}

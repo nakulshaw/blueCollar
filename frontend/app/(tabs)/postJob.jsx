@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -18,10 +19,19 @@ export default function PostJob() {
             try {
                 let { status } = await Location.requestForegroundPermissionsAsync();
                 if (status === 'granted') {
-                    let loc = await Location.getCurrentPositionAsync({});
-                    const initLoc = { latitude: loc.coords.latitude, longitude: loc.coords.longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 };
-                    setLocationRegion(initLoc);
-                    setSelectedLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+                    // 1. Set last known for immediate map load
+                    let lastLoc = await Location.getLastKnownPositionAsync({});
+                    if (lastLoc) {
+                        const initLoc = { latitude: lastLoc.coords.latitude, longitude: lastLoc.coords.longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+                        setLocationRegion(initLoc);
+                        setSelectedLocation({ latitude: lastLoc.coords.latitude, longitude: lastLoc.coords.longitude });
+                    }
+
+                    // 2. Fetch fresh current position for accuracy
+                    let currentLoc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+                    const accurateLoc = { latitude: currentLoc.coords.latitude, longitude: currentLoc.coords.longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+                    setLocationRegion(accurateLoc);
+                    setSelectedLocation({ latitude: currentLoc.coords.latitude, longitude: currentLoc.coords.longitude });
                 } else {
                     const fallback = { latitude: 28.6139, longitude: 77.2090, latitudeDelta: 0.05, longitudeDelta: 0.05 };
                     setLocationRegion(fallback);
@@ -86,57 +96,59 @@ export default function PostJob() {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Post a Job</Text>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f6f8' }} edges={['top']}>
+            <ScrollView contentContainerStyle={styles.container}>
+                <Text style={styles.title}>Post a Job</Text>
 
-            <TextInput
-                style={styles.input}
-                placeholder="Job Title (e.g. Plumber needed)"
-                value={title}
-                onChangeText={setTitle}
-            />
-            <TextInput
-                style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
-                placeholder="Job Description"
-                multiline
-                value={description}
-                onChangeText={setDescription}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Salary / Wages (₹)"
-                keyboardType="numeric"
-                value={salary}
-                onChangeText={setSalary}
-            />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Job Title (e.g. Plumber needed)"
+                    value={title}
+                    onChangeText={setTitle}
+                />
+                <TextInput
+                    style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                    placeholder="Job Description"
+                    multiline
+                    value={description}
+                    onChangeText={setDescription}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Salary / Wages (₹)"
+                    keyboardType="numeric"
+                    value={salary}
+                    onChangeText={setSalary}
+                />
 
-            <Text style={styles.mapLabel}>Select Job Location (Tap on map to place pin):</Text>
-            {locationRegion ? (
-                <View style={styles.mapContainer}>
-                    <MapView
-                        provider={PROVIDER_GOOGLE}
-                        style={styles.map}
-                        initialRegion={locationRegion}
-                        onPress={handleMapPress}
-                    >
-                        {selectedLocation && (
-                            <Marker coordinate={selectedLocation} />
-                        )}
-                    </MapView>
-                </View>
-            ) : (
-                <Text style={{ marginVertical: 10 }}>Loading map...</Text>
-            )}
+                <Text style={styles.mapLabel}>Select Job Location (Tap on map to place pin):</Text>
+                {locationRegion ? (
+                    <View style={styles.mapContainer}>
+                        <MapView
+                            provider={PROVIDER_GOOGLE}
+                            style={styles.map}
+                            initialRegion={locationRegion}
+                            onPress={handleMapPress}
+                        >
+                            {selectedLocation && (
+                                <Marker coordinate={selectedLocation} />
+                            )}
+                        </MapView>
+                    </View>
+                ) : (
+                    <Text style={{ marginVertical: 10 }}>Loading map...</Text>
+                )}
 
-            <TouchableOpacity style={styles.button} onPress={handlePostJob}>
-                <Text style={styles.buttonText}>PUBLISH JOB</Text>
-            </TouchableOpacity>
-        </ScrollView>
+                <TouchableOpacity style={styles.button} onPress={handlePostJob}>
+                    <Text style={styles.buttonText}>PUBLISH JOB</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flexGrow: 1, padding: 20, paddingTop: 60, backgroundColor: '#f4f6f8' },
+    container: { flexGrow: 1, padding: 20, paddingTop: 10, backgroundColor: '#f4f6f8' },
     title: { fontSize: 28, fontWeight: 'bold', color: '#333', marginBottom: 20 },
     input: { backgroundColor: '#fff', padding: 15, borderRadius: 8, marginBottom: 15, borderWidth: 1, borderColor: '#dee2e6' },
     button: { backgroundColor: '#007bff', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10, shadowColor: '#007bff', shadowOpacity: 0.3, shadowRadius: 5, elevation: 3 },

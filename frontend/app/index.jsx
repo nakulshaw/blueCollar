@@ -16,19 +16,24 @@ export default function Index() {
         }).start();
 
         const checkToken = async () => {
-            // Wait for 2.5 seconds to show the branding properly
+            // Wait for 1 second to show the branding properly
             setTimeout(async () => {
                 try {
                     const token = await AsyncStorage.getItem('token');
-                    if (token) {
+                    // Robust check: ensure token is a non-empty string and not "null"/"undefined"
+                    if (token && token !== 'null' && token !== 'undefined' && token.length > 5) {
                         router.replace('/(tabs)');
                     } else {
+                        // Clear potentially corrupted storage
+                        if (token === 'null' || token === 'undefined') {
+                            await AsyncStorage.removeItem('token');
+                        }
                         router.replace('/login');
                     }
                 } catch (e) {
                     router.replace('/login');
                 }
-            }, 2500);
+            }, 1000);
         };
 
         checkToken();
@@ -37,11 +42,7 @@ export default function Index() {
     return (
         <View style={styles.container}>
             <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-                <Image
-                    source={require('../assets/images/icon.png')}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
+                {/* Logo removed due to build issues */}
             </Animated.View>
         </View>
     );
