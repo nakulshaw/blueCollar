@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import api from '../../utils/api';
 
 export default function Dashboard() {
@@ -17,10 +18,12 @@ export default function Dashboard() {
     const [profileVisible, setProfileVisible] = useState(false);
     const [profile, setProfile] = useState({ name: '', email: '', phone: '', role: '', aadharStatus: '' });
 
-    useEffect(() => {
-        fetchJobs();
-        loadProfile();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            fetchJobs();
+            loadProfile();
+        }, [])
+    );
 
     const loadProfile = async () => {
         const name = await AsyncStorage.getItem('userName') || '';
@@ -105,8 +108,13 @@ export default function Dashboard() {
         <View style={styles.jobCard}>
             <Text style={styles.jobTitle}>{item.title}</Text>
             <Text style={styles.jobDesc} numberOfLines={2}>{item.description}</Text>
-            <Text style={styles.jobSalary}>Salary: ₹{item.salary}</Text>
-            {userRole !== 'employer' && (
+
+            <View style={styles.jobInfoRow}>
+                <Text style={styles.jobSalary}>₹{item.salary}</Text>
+                <Text style={styles.jobLocation}>📍 {item.locationName || 'Location N/A'}</Text>
+            </View>
+
+            {userRole === 'worker' && (
                 <TouchableOpacity style={styles.applyButton} onPress={() => handleApply(item._id, item.title)}>
                     <Text style={styles.applyText}>Apply Now</Text>
                 </TouchableOpacity>
@@ -245,7 +253,9 @@ const styles = StyleSheet.create({
     jobCard: { backgroundColor: '#fff', margin: 15, marginBottom: 0, padding: 20, borderRadius: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4 },
     jobTitle: { fontSize: 20, fontWeight: 'bold', color: '#007bff' },
     jobDesc: { color: '#555', marginVertical: 10, fontSize: 15, lineHeight: 22 },
-    jobSalary: { fontWeight: '700', color: '#28a745', marginBottom: 15, fontSize: 16 },
+    jobInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+    jobSalary: { fontWeight: '700', color: '#28a745', fontSize: 16 },
+    jobLocation: { color: '#666', fontSize: 14, fontWeight: '500' },
     applyButton: { backgroundColor: '#28a745', padding: 12, borderRadius: 8, alignItems: 'center' },
     applyText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
     emptyText: { textAlign: 'center', marginTop: 50, color: '#888' },

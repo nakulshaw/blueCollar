@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Dimensions } from 'react-native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import api from '../../utils/api';
 
 export default function PostJob() {
@@ -48,8 +48,23 @@ export default function PostJob() {
 
         try {
             let locationPoint = [0, 0];
+            let locationName = 'Location not specified';
+
             if (selectedLocation) {
                 locationPoint = [selectedLocation.longitude, selectedLocation.latitude];
+                // Reverse geocode to get human readable address
+                try {
+                    let reverseArr = await Location.reverseGeocodeAsync({
+                        latitude: selectedLocation.latitude,
+                        longitude: selectedLocation.longitude
+                    });
+                    if (reverseArr.length > 0) {
+                        const addr = reverseArr[0];
+                        locationName = `${addr.name || ''} ${addr.city || addr.district || addr.subregion || ''}`.trim() || 'Custom Location';
+                    }
+                } catch (geoErr) {
+                    console.log('Reverse geocode failed:', geoErr);
+                }
             } else {
                 return Alert.alert('Error', 'Please select a location on the map');
             }
@@ -58,7 +73,8 @@ export default function PostJob() {
                 title,
                 description,
                 salary,
-                locationPoint
+                locationPoint,
+                locationName
             });
 
             Alert.alert('Success', 'Job posted successfully');
@@ -98,6 +114,7 @@ export default function PostJob() {
             {locationRegion ? (
                 <View style={styles.mapContainer}>
                     <MapView
+                        provider={PROVIDER_GOOGLE}
                         style={styles.map}
                         initialRegion={locationRegion}
                         onPress={handleMapPress}

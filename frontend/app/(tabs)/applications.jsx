@@ -54,7 +54,8 @@ export default function Applications() {
         <View style={styles.card}>
             <Text style={styles.title}>{item.job?.title || 'Unknown Job'}</Text>
             <Text style={styles.desc}>{item.job?.description || 'N/A'}</Text>
-            <Text style={{ ...styles.status, color: item.status === 'accepted' ? '#28a745' : item.status === 'rejected' ? '#dc3545' : '#ffc107' }}>
+            <Text style={styles.location}>📍 {item.job?.locationName || 'Location N/A'}</Text>
+            <Text style={{ ...styles.status, color: item.status === 'accepted' ? '#28a745' : item.status === 'rejected' ? '#dc3545' : '#ffc107', marginTop: 10 }}>
                 Status: {item.status.toUpperCase()}
             </Text>
         </View>
@@ -117,6 +118,7 @@ const styles = StyleSheet.create({
     title: { fontSize: 20, fontWeight: 'bold', color: '#007bff' },
     desc: { color: '#555', marginVertical: 10, fontSize: 15 },
     status: { fontWeight: '700', fontSize: 16 },
+    location: { color: '#666', fontSize: 14, fontWeight: '500' },
     applicantRow: { marginTop: 15, padding: 10, backgroundColor: '#f8f9fa', borderRadius: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     applicantName: { fontWeight: 'bold', fontSize: 16 },
     applicantPhone: { color: '#666', fontSize: 14 },

@@ -1,14 +1,22 @@
-import { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Image, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Index() {
     const router = useRouter();
+    const fadeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
+        // Fade in animation
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+        }).start();
+
         const checkToken = async () => {
-            // Minor delay to ensure smooth transition
+            // Wait for 2.5 seconds to show the branding properly
             setTimeout(async () => {
                 try {
                     const token = await AsyncStorage.getItem('token');
@@ -20,7 +28,7 @@ export default function Index() {
                 } catch (e) {
                     router.replace('/login');
                 }
-            }, 500);
+            }, 2500);
         };
 
         checkToken();
@@ -28,7 +36,13 @@ export default function Index() {
 
     return (
         <View style={styles.container}>
-            <ActivityIndicator size="large" color="#007bff" />
+            <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
+                <Image
+                    source={require('../assets/images/icon.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
+            </Animated.View>
         </View>
     );
 }
@@ -39,5 +53,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff'
+    },
+    logoContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    logo: {
+        width: 180,
+        height: 180,
     }
 });

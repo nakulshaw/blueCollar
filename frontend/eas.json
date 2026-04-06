@@ -1,15 +1,6 @@
 {
   "cli": {
-    "version": ">= 12.0.0",
-    "appExtensions": {
-      "core": {
-        "build": {
-          "ios": {
-            "ext": "com.apple.developer.nfc.readersession.formats"
-          }
-        }
-      }
-    }
+    "version": ">= 12.0.0"
   },
   "build": {
     "development": {

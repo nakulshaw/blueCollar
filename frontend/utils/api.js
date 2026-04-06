@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
   // REPLACE THIS with your hosted backend URL once deployed (e.g. https://blue-collar-api.onrender.com/api)
-  baseURL: 'http://10.51.199.59:5000/api', 
+  baseURL: 'https://bluecollar-oos6.onrender.com/api',
   headers: {
     'Content-Type': 'application/json'
   }

@@ -23,7 +23,7 @@ const auth = (req, res, next) => {
 // @desc    Post a job
 // @access  Private (Employer)
 router.post('/', auth, async (req, res) => {
-    const { title, description, salary, locationPoint } = req.body;
+    const { title, description, salary, locationPoint, locationName } = req.body;
 
     try {
         const newJob = new Job({
@@ -34,7 +34,8 @@ router.post('/', auth, async (req, res) => {
             location: {
                 type: 'Point',
                 coordinates: locationPoint // [longitude, latitude]
-            }
+            },
+            locationName
         });
 
         const job = await newJob.save();
@@ -105,7 +106,7 @@ router.get('/employer/me', auth, async (req, res) => {
 router.get('/worker/applications', auth, async (req, res) => {
     try {
         const applications = await Application.find({ worker: req.user.id })
-            .populate('job', 'title description salary')
+            .populate('job', 'title description salary locationName')
             .sort({ createdAt: -1 });
         res.json(applications);
     } catch (err) {

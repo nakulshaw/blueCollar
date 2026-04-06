@@ -29,6 +29,10 @@ const JobSchema = new mongoose.Schema({
             required: true 
         }
     },
+    locationName: {
+        type: String,
+        default: 'Location not specified'
+    },
     createdAt: {
         type: Date,
         default: Date.now

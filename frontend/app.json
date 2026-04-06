@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "BlueCollar",
+    "slug": "bluecollar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -13,6 +13,11 @@
     },
     "android": {
       "package": "com.nakul.bluecollar",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBw6dGfSLAOeo1UL7IMJRVn0S5T-oZX84E"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -44,6 +49,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ccb79c8a-8b1e-4a11-8ef2-c1f8271120b5"
+      }
     }
   }
 }
