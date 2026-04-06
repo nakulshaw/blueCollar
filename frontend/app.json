@@ -14,9 +14,7 @@
     "android": {
       "package": "com.nakul.bluecollar",
       "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyBw6dGfSLAOeo1UL7IMJRVn0S5T-oZX84E"
-        }
+        "googleMaps": {}
       },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
