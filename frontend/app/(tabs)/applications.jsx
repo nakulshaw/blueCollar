@@ -102,8 +102,8 @@ export default function Applications() {
                 fetchData();
             }
         } catch (err) {
-            console.error(err);
-            Alert.alert('Error', 'Failed to upload work evidence.');
+            const errorMsg = err.response?.data?.error || err.response?.data?.msg || err.message;
+            Alert.alert('Error', `Failed to upload work evidence: ${errorMsg}`);
         } finally {
             setUploadingAppId(null);
         }
