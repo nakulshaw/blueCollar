@@ -66,7 +66,7 @@ router.get('/', auth, async (req, res) => {
             };
         }
 
-        const jobs = await Job.find(query).sort({ date: -1 });
+        const jobs = await Job.find(query).sort({ createdAt: -1 });
         res.json(jobs);
     } catch (err) {
         console.error(err.message);
@@ -80,7 +80,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/employer/me', auth, async (req, res) => {
     try {
         // Find jobs by this employer
-        const jobs = await Job.find({ employer: req.user.id }).sort({ date: -1 });
+        const jobs = await Job.find({ employer: req.user.id }).sort({ createdAt: -1 });
         
         // Populate applications for each job
         const jobsWithApps = await Promise.all(jobs.map(async (job) => {
@@ -233,29 +233,6 @@ router.put('/applications/:appId/review', auth, async (req, res) => {
         res.json(application);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
-    }
-});
-
-// @route   PUT api/jobs/applications/:appId
-// @desc    Update application status (Employer only)
-// @access  Private (Employer)
-router.put('/applications/:appId', auth, async (req, res) => {
-    const { status } = req.body;
-    try {
-        let application = await Application.findById(req.params.appId).populate('job', 'employer');
-        if (!application) {
-            return res.status(404).json({ msg: 'Application not found' });
-        }
-        // Only the employer who posted the job can modify the application
-        if (application.job.employer.toString() !== req.user.id) {
-            return res.status(401).json({ msg: 'Not authorized to perform this update' });
-        }
-        application.status = status;
-        await application.save();
-        res.json(application);
-    } catch (err) {
-        console.error(err.message);
         res.status(500).send('Server Error');
     }
 });

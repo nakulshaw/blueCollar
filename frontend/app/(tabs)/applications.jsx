@@ -18,6 +18,11 @@ export default function Applications() {
     const [rating, setRating] = useState(5);
     const [reviewText, setReviewText] = useState('');
     const [uploading, setUploading] = useState(false);
+    const [workerHistory, setWorkerHistory] = useState([]);
+    const [workerAvgRating, setWorkerAvgRating] = useState(0);
+    const [historyModalVisible, setHistoryModalVisible] = useState(false);
+    const [selectedWorkerName, setSelectedWorkerName] = useState('');
+    const [fetchingHistory, setFetchingHistory] = useState(false);
 
     useEffect(() => {
         const loadRole = async () => {
@@ -117,6 +122,21 @@ export default function Applications() {
         }
     };
 
+    const handleViewWorkerHistory = async (workerId, workerName) => {
+        try {
+            setFetchingHistory(true);
+            setSelectedWorkerName(workerName);
+            const res = await api.get(`/jobs/worker/${workerId}/history`);
+            setWorkerHistory(res.data.history);
+            setWorkerAvgRating(res.data.avgRating);
+            setHistoryModalVisible(true);
+        } catch (err) {
+            Alert.alert('Error', 'Failed to fetch worker history.');
+        } finally {
+            setFetchingHistory(false);
+        }
+    };
+
     const renderWorkerView = ({ item }) => (
         <View style={styles.card}>
             <Text style={styles.title}>{item.job?.title || 'Unknown Job'}</Text>
@@ -170,11 +190,11 @@ export default function Applications() {
             <Text style={styles.desc}>Applicants: {item.applications.length}</Text>
             {item.applications.map(app => (
                 <View key={app._id} style={styles.applicantRow}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.applicantName}>{app.worker?.name}</Text>
+                    <TouchableOpacity style={{ flex: 1 }} onPress={() => handleViewWorkerHistory(app.worker?._id, app.worker?.name)}>
+                        <Text style={styles.applicantName}>{app.worker?.name} <Text style={{ fontSize: 12, color: '#007bff', fontWeight: 'normal' }}>(View Portfolio)</Text></Text>
                         <Text style={styles.applicantPhone}>{app.worker?.phone || app.worker?.email}</Text>
                         <Text style={styles.applicantStatus}>Current Status: {app.status}</Text>
-                    </View>
+                    </TouchableOpacity>
                     <View style={styles.actionRow}>
                         {app.status === 'pending' && (
                             <>
@@ -260,7 +280,61 @@ export default function Applications() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+
+            {/* Worker Portfolio Modal */}
+            <Modal visible={historyModalVisible} animationType="slide">
+                <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f6f8' }}>
+                    <View style={styles.modalHeader}>
+                        <View>
+                            <Text style={styles.modalTitle}>{selectedWorkerName}'s Portfolio</Text>
+                            <Text style={{ color: '#ff9800', fontWeight: 'bold' }}>⭐ Average Rating: {workerAvgRating}</Text>
+                        </View>
+                        <TouchableOpacity onPress={() => setHistoryModalVisible(false)}>
+                            <Text style={{ color: '#007bff', fontWeight: 'bold', fontSize: 16 }}>Done</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <FlatList
+                        data={workerHistory}
+                        keyExtractor={(item) => item._id}
+                        contentContainerStyle={{ padding: 15 }}
+                        renderItem={({ item }) => (
+                            <View style={styles.historyCard}>
+                                <View style={styles.historyTop}>
+                                    <Text style={styles.historyTitle}>{item.job?.title || 'Completed Job'}</Text>
+                                    {item.rating && <Text style={styles.historyRating}>⭐ {item.rating}</Text>}
+                                </View>
+                                <Text style={styles.historyDetail}>📍 {item.job?.locationName}</Text>
+                                <Text style={styles.historyDetail}>💰 ₹{item.job?.salary}</Text>
+
+                                {item.workImages && item.workImages.length > 0 && (
+                                    <ScrollView horizontal style={{ flexDirection: 'row', marginVertical: 8 }}>
+                                        {item.workImages.map((img, i) => (
+                                            <Image
+                                                key={i}
+                                                source={{ uri: img.startsWith('http') ? img : `${api.defaults.baseURL.replace('/api', '')}${img}` }}
+                                                style={{ width: 60, height: 60, borderRadius: 6, marginRight: 6 }}
+                                            />
+                                        ))}
+                                    </ScrollView>
+                                )}
+
+                                {item.review && <Text style={styles.historyReview}>"{item.review}"</Text>}
+                                <Text style={styles.historyDate}>{new Date(item.completedAt).toLocaleDateString()}</Text>
+                            </View>
+                        )}
+                        ListEmptyComponent={<Text style={styles.emptyText}>No work history found for this worker.</Text>}
+                    />
+                </SafeAreaView>
+            </Modal>
+
+            {
+                fetchingHistory && (
+                    <View style={styles.loadingOverlay}>
+                        <ActivityIndicator size="large" color="#007bff" />
+                    </View>
+                )
+            }
+        </SafeAreaView >
     );
 }
 
@@ -299,5 +373,16 @@ const styles = StyleSheet.create({
     reviewInput: { backgroundColor: '#f4f6f8', padding: 12, borderRadius: 8, height: 80, textAlignVertical: 'top' },
     modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 15, marginTop: 20 },
     submitBtn: { backgroundColor: '#007bff', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
-    cancelBtn: { paddingVertical: 10, paddingHorizontal: 10 }
+    cancelBtn: { paddingVertical: 10, paddingHorizontal: 10 },
+
+    // History Modal Styles
+    modalHeader: { height: 70, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#eee' },
+    historyCard: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+    historyTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
+    historyTitle: { fontSize: 17, fontWeight: 'bold', color: '#333' },
+    historyRating: { fontWeight: 'bold', color: '#ffc107' },
+    historyDetail: { fontSize: 13, color: '#666', marginBottom: 2 },
+    historyReview: { fontStyle: 'italic', color: '#555', marginTop: 8, padding: 8, backgroundColor: '#f8f9fa', borderRadius: 6 },
+    historyDate: { fontSize: 11, color: '#999', marginTop: 10, textAlign: 'right' },
+    loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 999 }
 });
