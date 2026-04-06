@@ -176,17 +176,19 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Explicitly configure cloudinary
-if (process.env.CLOUDINARY_URL) {
-    cloudinary.config(); // Force SDK to pick up CLOUDINARY_URL
-    console.log('Cloudinary Info: Configured via CLOUDINARY_URL');
+// Explicitly configure cloudinary with trimming to prevent whitespace errors
+const CLOUDINARY_URL = process.env.CLOUDINARY_URL ? process.env.CLOUDINARY_URL.trim() : null;
+
+if (CLOUDINARY_URL) {
+    cloudinary.config(); // SDK automatically uses CLOUDINARY_URL from process.env
+    console.log('Cloudinary Info: Configured via CLOUDINARY_URL (Trimmed)');
 } else {
     cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET
+        cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || '').trim(),
+        api_key: (process.env.CLOUDINARY_API_KEY || '').trim(),
+        api_secret: (process.env.CLOUDINARY_API_SECRET || '').trim()
     });
-    console.log('Cloudinary Info: Using individual credentials');
+    console.log('Cloudinary Info: Using individual credentials (Trimmed)');
 }
 
 // Log non-sensitive info for verification
