@@ -19,13 +19,7 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ msg: 'User already exists' });
         }
 
-        user = new User({
-            role,
-            name,
-            email,
-            phone,
-            password
-        });
+        user = new User({ role, name, email, phone, password });
 
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
@@ -40,7 +34,14 @@ router.post('/register', async (req, res) => {
             { expiresIn: 360000 },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, role: user.role });
+                res.json({
+                    token,
+                    role: user.role,
+                    name: user.name,
+                    email: user.email || '',
+                    phone: user.phone || '',
+                    aadharStatus: user.aadharStatus
+                });
             }
         );
     } catch (err) {
@@ -78,12 +79,35 @@ router.post('/login', async (req, res) => {
             { expiresIn: 360000 },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, role: user.role });
+                res.json({
+                    token,
+                    role: user.role,
+                    name: user.name,
+                    email: user.email || '',
+                    phone: user.phone || '',
+                    aadharStatus: user.aadharStatus
+                });
             }
         );
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/auth/me
+// @desc    Get logged-in user's profile
+// @access  Private
+router.get('/me', async (req, res) => {
+    const token = req.header('x-auth-token');
+    if (!token) return res.status(401).json({ msg: 'No token' });
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
+        const user = await User.findById(decoded.user.id).select('-password');
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(401).json({ msg: 'Token not valid' });
     }
 });
 

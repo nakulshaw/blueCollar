@@ -28,6 +28,10 @@ export default function Register() {
             const res = await api.post('/auth/register', payload);
             await AsyncStorage.setItem('token', res.data.token);
             await AsyncStorage.setItem('role', res.data.role);
+            await AsyncStorage.setItem('userName', res.data.name || '');
+            await AsyncStorage.setItem('userEmail', res.data.email || '');
+            await AsyncStorage.setItem('userPhone', res.data.phone || '');
+            await AsyncStorage.setItem('aadharStatus', res.data.aadharStatus || 'pending');
             router.replace('/(tabs)');
         } catch (err) {
             setErrorMessage(err.response?.data?.msg || 'An error occurred during registration.');
