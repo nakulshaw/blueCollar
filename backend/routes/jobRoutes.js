@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
 const jwt = require('jsonwebtoken');
@@ -15,6 +16,7 @@ const auth = (req, res, next) => {
         req.user = decoded.user;
         next();
     } catch (err) {
+        console.error('Auth Middleware Error:', err.message);
         res.status(401).json({ msg: 'Token is not valid' });
     }
 };
@@ -240,6 +242,9 @@ router.put('/applications/:appId/review', auth, async (req, res) => {
 // GET api/jobs/worker/:workerId/history
 router.get('/worker/:workerId/history', auth, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.workerId)) {
+            return res.status(400).json({ msg: 'Invalid Worker ID' });
+        }
         const history = await Application.find({ 
             worker: req.params.workerId, 
             status: 'completed' 
@@ -251,8 +256,8 @@ router.get('/worker/:workerId/history', auth, async (req, res) => {
 
         res.json({ history, avgRating, count: history.length });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
+        console.error('FetchHistory API Error:', err);
+        res.status(500).json({ msg: 'Server Error', error: err.message });
     }
 });
 
