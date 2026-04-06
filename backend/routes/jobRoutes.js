@@ -176,16 +176,22 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+// Explicitly configure cloudinary
 if (process.env.CLOUDINARY_URL) {
-    console.log('Cloudinary: Using CLOUDINARY_URL configuration.');
+    cloudinary.config(); // Force SDK to pick up CLOUDINARY_URL
+    console.log('Cloudinary Info: Configured via CLOUDINARY_URL');
 } else {
     cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
         api_key: process.env.CLOUDINARY_API_KEY,
         api_secret: process.env.CLOUDINARY_API_SECRET
     });
-    console.log('Cloudinary: Using individual credentials. Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);
+    console.log('Cloudinary Info: Using individual credentials');
 }
+
+// Log non-sensitive info for verification
+console.log('Cloudinary Verify - Cloud Name:', cloudinary.config().cloud_name);
+console.log('Cloudinary Verify - API Key:', cloudinary.config().api_key);
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
