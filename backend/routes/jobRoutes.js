@@ -192,12 +192,13 @@ if (process.env.CLOUDINARY_URL) {
 // Log non-sensitive info for verification
 console.log('Cloudinary Verify - Cloud Name:', cloudinary.config().cloud_name);
 console.log('Cloudinary Verify - API Key:', cloudinary.config().api_key);
+console.log('Cloudinary Verify - Secret Present:', !!cloudinary.config().api_secret);
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'bluecollar-work-evidence',
-        allowed_formats: ['jpg', 'png', 'jpeg'],
+        // Removing allowed_formats temporarily to solve signature issues
     },
 });
 
